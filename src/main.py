@@ -340,10 +340,24 @@ class NIDS_GUI(tk.Tk):
             self.log("AI Module Ready. API key Configured")
 
     def _on_source_change(self, e):
-        if self.source_var.get().startswith("Real"):
-            p = filedialog.askopenfilename(filetypes=[("CSV","*.csv")])
-            if p: self.selected_csv_path = p
-            else: self.source_var.set("Synthetic Simulation")
+        selection = self.source_var.get()
+        
+        # Logic 1: If user picked Real CSV
+        if selection == "Real Dataset (CIC-IDS2017 CSV)":
+            p = filedialog.askopenfilename(filetypes=[("CSV Files","*.csv")])
+            if p: 
+                self.selected_csv_path = p
+                # Explicit Log: Shows file name in terminal
+                self.log(f"DATA-SOURCE SELECTED: Real Dataset -> {os.path.basename(p)}")
+            else: 
+                # Revert if user hits Cancel
+                self.source_var.set("Synthetic Simulation")
+                self.selected_csv_path = None
+                self.log("Selection Cancelled. Reverting to Synthetic Mode.")
+        else:
+            # Logic 2: If user picked Synthetic (or reverted to it)
+            self.selected_csv_path = None
+            self.log("DATA-SOURCE SELECTED: Synthetic Simulation Mode")
 
     def run_training(self):
         mode = 'csv' if self.source_var.get().startswith("Real") else 'synthetic'
@@ -404,7 +418,7 @@ class NIDS_GUI(tk.Tk):
         
         if pred == 1:
             self.lbl_status.config(text="! MALICIOUS ATTACK !", bg=GUCCI_RED)
-            self.log("⨻NIDS ALERT- CRITICAL: Attack Pattern Recognized!")
+            self.log("⨻ NIDS ALERT- CRITICAL: Attack Pattern Recognized!")
         else:
             self.lbl_status.config(text="✓ BENIGN TRAFFIC", bg=COLOR_SUCCESS)
             self.log("Packet verified safe.>_< Traffic benign.")
